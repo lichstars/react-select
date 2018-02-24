@@ -1,32 +1,20 @@
 // @flow
 // @jsx glam
 
-import './index.css';
 import glam from 'glam';
 import React, { Component } from 'react';
-import { BrowserRouter, Link, Route, Switch } from 'react-router-dom';
-
-import {
-  Animated,
-  Async,
-  Creatable,
-  Experimental,
-  Home,
-  NoMatch,
-  Styled,
-  Tests,
-} from './pages';
+import { Link, withRouter } from 'react-router-dom';
 
 const borderColor = 'hsl(0, 0%, 88%)';
 const navWidth = 180;
-const appWidth = 640;
+const appWidth = 800;
 const appGutter = 20;
 const contentGutter = 30;
 const pagePadding = 280;
 const smallDevice = '@media (max-width: 769px)';
 const largeDevice = '@media (min-width: 770px)';
 
-const AppContainer = props => (
+export const AppContainer = (props: any) => (
   <div
     css={{
       boxSizing: 'border-box',
@@ -39,7 +27,7 @@ const AppContainer = props => (
     {...props}
   />
 );
-const PageContent = props => (
+export const PageContent = (props: any) => (
   <div
     css={{
       paddingBottom: contentGutter,
@@ -52,7 +40,7 @@ const PageContent = props => (
     {...props}
   />
 );
-const AppContent = props => (
+export const AppContent = (props: any) => (
   <div
     css={{
       flex: '1 1 auto',
@@ -61,21 +49,12 @@ const AppContent = props => (
 
       [largeDevice]: {
         paddingLeft: navWidth + contentGutter,
-
-        ':before': {
-          borderRight: `1px solid ${borderColor}`,
-          content: ' ',
-          marginLeft: -(navWidth + contentGutter),
-          height: '100%',
-          position: 'fixed',
-          width: navWidth,
-        },
       },
     }}
     {...props}
   />
 );
-const Nav = props => (
+export const Nav = (props: any) => (
   <div
     css={{
       [smallDevice]: {
@@ -97,7 +76,6 @@ const Nav = props => (
         display: 'block',
         float: 'left',
         paddingTop: contentGutter,
-        position: 'fixed',
         width: navWidth,
         zIndex: 1,
       },
@@ -105,7 +83,8 @@ const Nav = props => (
     {...props}
   />
 );
-const NavItem = ({ selected, ...props }) => (
+type NavItemProps = { selected: boolean };
+export const NavItem = ({ selected, ...props }: NavItemProps) => (
   <Link
     css={{
       color: selected ? 'hsl(0, 0%, 0%)' : 'hsl(0, 0%, 40%)',
@@ -141,52 +120,25 @@ const NavItem = ({ selected, ...props }) => (
     {...props}
   />
 );
-const links = [
-  { label: 'Home', value: '/' },
-  { label: 'Animation', value: '/animated' },
-  { label: 'Async Options', value: '/async' },
-  { label: 'Creatable Options', value: '/creatable' },
-  { label: 'Custom Styles', value: '/styled' },
-  { label: 'Experimental', value: '/experimental' },
-];
 
-export default class App extends Component<*> {
+// Return scroll to top on route change
+class ScrollToTop extends Component<*> {
+  componentDidUpdate(prevProps) {
+    const { history, location } = this.props;
+
+    // do not influence scroll on browser back/forward
+    if (history.action === 'POP') return;
+
+    // no scroll when extending the current path
+    const pathArr = location.pathname.split('/');
+    if (!prevProps.location.pathname.includes(pathArr[1])) {
+      window.scrollTo(0, 0);
+    }
+  }
+
   render() {
-    return (
-      <BrowserRouter>
-        <Route>
-          <AppContainer>
-            <Route
-              render={({ location }) => (
-                <Nav>
-                  {links.map(l => {
-                    const selected = location.pathname === l.value;
-                    return (
-                      <NavItem key={l.value} selected={selected} to={l.value}>
-                        {l.label}
-                      </NavItem>
-                    );
-                  })}
-                </Nav>
-              )}
-            />
-            <AppContent>
-              <PageContent>
-                <Switch>
-                  <Route exact path="/" component={Home} />
-                  <Route exact path="/animated" component={Animated} />
-                  <Route exact path="/async" component={Async} />
-                  <Route exact path="/creatable" component={Creatable} />
-                  <Route exact path="/styled" component={Styled} />
-                  <Route exact path="/experimental" component={Experimental} />
-                  <Route exact path="/tests" component={Tests} />
-                  <Route component={NoMatch} />
-                </Switch>
-              </PageContent>
-            </AppContent>
-          </AppContainer>
-        </Route>
-      </BrowserRouter>
-    );
+    return this.props.children;
   }
 }
+
+export const ScrollRestoration = withRouter(ScrollToTop);
